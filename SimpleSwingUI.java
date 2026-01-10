@@ -6,7 +6,7 @@ public class SimpleSwingUI {
     public static void main(String[] args) {
         // Create frame
         JFrame frame = new JFrame("Simple Swing Example");
-        frame.setSize(300, 150);
+        frame.setSize(1000, 500);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(null);
 
