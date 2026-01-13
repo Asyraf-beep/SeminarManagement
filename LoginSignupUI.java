@@ -38,10 +38,35 @@ public class LoginSignupUI {
 
         // CENTER WRAPPER
         JPanel centerWrapper = new JPanel();
-        centerWrapper.setLayout(new BoxLayout(centerWrapper, BoxLayout.Y_AXIS));  
-        centerWrapper.add(Box.createVerticalStrut(70)); 
+        centerWrapper.setLayout(new BoxLayout(centerWrapper, BoxLayout.Y_AXIS)); 
+        centerWrapper.setBorder(
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.WHITE, 5),
+                BorderFactory.createEmptyBorder(20, 30, 20, 30)
+            )
+        ); 
+        centerWrapper.add(Box.createVerticalStrut(50)); 
         centerWrapper.add(formPanel);
-        centerWrapper.add(Box.createVerticalGlue()); // absorbs extra space  
+
+        // -------- ROLE SELECTION --------
+        JRadioButton student = new JRadioButton("Student");
+        JRadioButton coordinator = new JRadioButton("Coordinator");
+        JRadioButton evaluator = new JRadioButton("Evaluator");
+
+        // Group them (VERY IMPORTANT)
+        ButtonGroup usertype = new ButtonGroup();
+        usertype.add(student);
+        usertype.add(coordinator);
+        usertype.add(evaluator);
+
+        // Default selection (optional)
+        student.setSelected(true);
+
+        JPanel rolePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        rolePanel.add(student);
+        rolePanel.add(coordinator);
+        rolePanel.add(evaluator);
+        centerWrapper.add(rolePanel);
 
         // BUTTON PANEL
         JPanel buttonPanel = new JPanel(new FlowLayout());
@@ -51,11 +76,11 @@ public class LoginSignupUI {
 
         buttonPanel.add(loginBtn);
         buttonPanel.add(signupBtn);
-
-        centerWrapper.add(Box.createVerticalStrut(0));
         centerWrapper.add(buttonPanel);
+        centerWrapper.add(Box.createVerticalGlue()); // absorbs extra space  
 
         frame.add(centerWrapper, BorderLayout.CENTER);
+
 
         // ACTIONS----------------------------------------------------------------------------------------------------
         loginBtn.addActionListener(e -> {
@@ -72,6 +97,18 @@ public class LoginSignupUI {
         signupBtn.addActionListener(e -> {
             frame.dispose();
             showSignup();
+        });
+
+        student.addActionListener(e -> {
+            System.out.println("Student selected");
+        });
+
+        coordinator.addActionListener(e -> {
+            System.out.println("Coordinator selected");
+        });
+
+        evaluator.addActionListener(e -> {
+            System.out.println("Evaluator selected");
         });
         // -----------------------------------------------------------------------------------------------------------
 
