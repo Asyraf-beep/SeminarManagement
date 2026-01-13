@@ -6,7 +6,6 @@ public class LoginSignupUI {
 
     static final String FILE_NAME = "users.txt";
     public static void main(String[] args) {
-        
         showLogin();
     }
 
@@ -16,10 +15,10 @@ public class LoginSignupUI {
         MyFrame frame = new MyFrame();
         frame.setTitle("Login");
 
-        // HEADER
+        // HEADER --------------------------------------------------------------------------------
         frame.add(new HeaderPanel(), BorderLayout.NORTH);
 
-        // FORM PANEL
+        // FORM PANEL ----------------------------------------------------------------------------
         JPanel formPanel = new JPanel(new GridLayout(2, 1, 0, 15));
         JPanel userFieldPanel = new JPanel(new FlowLayout(FlowLayout.CENTER,0,0));
         JPanel passFieldPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
@@ -48,18 +47,17 @@ public class LoginSignupUI {
         centerWrapper.add(Box.createVerticalStrut(50)); 
         centerWrapper.add(formPanel);
 
-        // -------- ROLE SELECTION --------
+        // USERTYPE SELECTION ----------------------------------------------------------------
         JRadioButton student = new JRadioButton("Student");
         JRadioButton coordinator = new JRadioButton("Coordinator");
         JRadioButton evaluator = new JRadioButton("Evaluator");
 
-        // Group them (VERY IMPORTANT)
         ButtonGroup usertype = new ButtonGroup();
         usertype.add(student);
         usertype.add(coordinator);
         usertype.add(evaluator);
 
-        // Default selection (optional)
+        // Default selection
         student.setSelected(true);
 
         JPanel rolePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
@@ -68,7 +66,7 @@ public class LoginSignupUI {
         rolePanel.add(evaluator);
         centerWrapper.add(rolePanel);
 
-        // BUTTON PANEL
+        // BUTTON PANEL ----------------------------------------------------------------------
         JPanel buttonPanel = new JPanel(new FlowLayout());
 
         JButton loginBtn = new JButton("Login");
@@ -80,9 +78,24 @@ public class LoginSignupUI {
         centerWrapper.add(Box.createVerticalGlue()); // absorbs extra space  
 
         frame.add(centerWrapper, BorderLayout.CENTER);
+        int userRole;
 
+        // ACTIONS -------------------------------------------------------------------------------------
+        student.addActionListener(e -> {
+            userRole = 1;
+            System.out.println("Student selected");
+        });
 
-        // ACTIONS----------------------------------------------------------------------------------------------------
+        coordinator.addActionListener(e -> {
+            userRole = 2;
+            System.out.println("Coordinator selected");
+        });
+
+        evaluator.addActionListener(e -> {
+            userRole = 3;
+            System.out.println("Evaluator selected");
+        });
+
         loginBtn.addActionListener(e -> {
             String user = userField.getText();
             String pass = new String(passField.getPassword());
@@ -99,53 +112,83 @@ public class LoginSignupUI {
             showSignup();
         });
 
-        student.addActionListener(e -> {
-            System.out.println("Student selected");
-        });
-
-        coordinator.addActionListener(e -> {
-            System.out.println("Coordinator selected");
-        });
-
-        evaluator.addActionListener(e -> {
-            System.out.println("Evaluator selected");
-        });
-        // -----------------------------------------------------------------------------------------------------------
+        
+        // --------------------------------------------------------------------------------------------
 
         frame.setVisible(true);
     }
 
-    // SIGN UP WINDOW
+    // SIGN UP WINDOW ------------------------------------------------------------------------------------
     static void showSignup() {
+
         MyFrame frame = new MyFrame();
         frame.setTitle("Sign Up");
 
-        JLabel userLabel = new JLabel("Username:");
-        userLabel.setBounds(30, 30, 80, 25);
-        frame.add(userLabel);
+        // HEADER
+        frame.add(new HeaderPanel(), BorderLayout.NORTH);
+        JPanel formPanel = new JPanel(new GridLayout(5, 1, 0, 20));
+        JPanel userFieldPanel = new JPanel(new FlowLayout(FlowLayout.LEFT,20,20));
+        JPanel passFieldPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 0));
 
-        JTextField userField = new JTextField();
-        userField.setBounds(120, 30, 120, 25);
-        frame.add(userField);
+        userFieldPanel.add(new JLabel("Username: "));
+        JTextField userField = new JTextField(12);
+        userFieldPanel.add(userField);
 
-        JLabel passLabel = new JLabel("Password:");
-        passLabel.setBounds(30, 70, 80, 25);
-        frame.add(passLabel);
+        passFieldPanel.add(new JLabel("Password: "));
+        JPasswordField passField = new JPasswordField(12);
+        passFieldPanel.add(passField);
 
-        JPasswordField passField = new JPasswordField();
-        passField.setBounds(120, 70, 120, 25);
-        frame.add(passField);
+        formPanel.add(userFieldPanel);
+        formPanel.add(passFieldPanel);
 
+        // USERTYPE SELECTION ----------------------------------------------------------------
+        JRadioButton student = new JRadioButton("Student");
+        JRadioButton coordinator = new JRadioButton("Coordinator");
+        JRadioButton evaluator = new JRadioButton("Evaluator");
+
+        ButtonGroup usertypeGroup = new ButtonGroup();
+        usertypeGroup.add(student);
+        usertypeGroup.add(coordinator);
+        usertypeGroup.add(evaluator);
+
+        // Default selection
+        student.setSelected(true);
+
+        JPanel rolePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        rolePanel.add(student);
+        rolePanel.add(coordinator);
+        rolePanel.add(evaluator);
+        formPanel.add(rolePanel);
+
+
+        JPanel buttonPanel = new JPanel(new FlowLayout());
         JButton signupBtn = new JButton("Create Account");
-        signupBtn.setBounds(80, 120, 140, 30);
-        frame.add(signupBtn);
+        JButton backBtn = new JButton("Back");
+        buttonPanel.add(signupBtn);
+        buttonPanel.add(backBtn);
+        formPanel.add(buttonPanel);
+
+        frame.add(formPanel, BorderLayout.WEST);
 
         signupBtn.addActionListener(e -> {
             String user = userField.getText();
             String pass = new String(passField.getPassword());
+            // Get selected user type
+            String usertype = "Student"; // default
+            if (coordinator.isSelected()) usertype = "Coordinator";
+            else if (evaluator.isSelected()) usertype = "Evaluator";
 
-            saveUser(user, pass);
-            JOptionPane.showMessageDialog(frame, "Account Created!");
+            if (!user.isEmpty() && !pass.isEmpty()) {
+                saveUser(user, pass, usertype);
+                JOptionPane.showMessageDialog(frame, "Account Created!");
+                frame.dispose();
+                showLogin();
+            } else {
+                JOptionPane.showMessageDialog(frame, "Fields cannot be left empty");
+            }
+        });
+
+        backBtn.addActionListener(e ->{
             frame.dispose();
             showLogin();
         });
@@ -153,10 +196,11 @@ public class LoginSignupUI {
         frame.setVisible(true);
     }
 
+
     // SAVE USER TO FILE
-    static void saveUser(String username, String password) {
+    static void saveUser(String username, String password, String usertype) {
         try (FileWriter fw = new FileWriter(FILE_NAME, true)) {
-            fw.write(username + "," + password + "\n");
+            fw.write(username + "," + password + "," + usertype + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -169,6 +213,7 @@ public class LoginSignupUI {
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(",");
                 if (data[0].equals(username) && data[1].equals(password)) {
+                    String usertype = data[2];
                     return true;
                 }
             }
