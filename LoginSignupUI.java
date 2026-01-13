@@ -5,7 +5,6 @@ import java.io.*;
 public class LoginSignupUI {
 
     static final String FILE_NAME = "users.txt";
-
     public static void main(String[] args) {
         
         showLogin();
@@ -16,25 +15,33 @@ public class LoginSignupUI {
         
         MyFrame frame = new MyFrame();
         frame.setTitle("Login");
-        frame.setLayout(new BorderLayout());
 
         // HEADER
-        frame.add(new HeaderPanel("Login"), BorderLayout.NORTH);
+        frame.add(new HeaderPanel(), BorderLayout.NORTH);
 
         // FORM PANEL
-        JPanel formPanel = new JPanel(new GridLayout(2, 2, 10, 10));
-        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+        JPanel formPanel = new JPanel(new GridLayout(2, 1, 0, 15));
+        JPanel userFieldPanel = new JPanel(new FlowLayout(FlowLayout.CENTER,0,0));
+        JPanel passFieldPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
 
-        JLabel userLabel = new JLabel("Username:");
-        JTextField userField = new JTextField();
-        JLabel passLabel = new JLabel("Password:");
-        JPasswordField passField = new JPasswordField();
 
-        formPanel.add(userLabel);
-        formPanel.add(userField);
-        formPanel.add(passLabel);
-        formPanel.add(passField);
-        frame.add(formPanel, BorderLayout.CENTER);
+        userFieldPanel.add(new JLabel("Username: "));
+        JTextField userField = new JTextField(12);
+        userFieldPanel.add(userField);
+
+        passFieldPanel.add(new JLabel("Password: "));
+        JPasswordField passField = new JPasswordField(12);
+        passFieldPanel.add(passField);
+
+        formPanel.add(userFieldPanel);
+        formPanel.add(passFieldPanel);
+
+        // CENTER WRAPPER
+        JPanel centerWrapper = new JPanel();
+        centerWrapper.setLayout(new BoxLayout(centerWrapper, BoxLayout.Y_AXIS));  
+        centerWrapper.add(Box.createVerticalStrut(70)); 
+        centerWrapper.add(formPanel);
+        centerWrapper.add(Box.createVerticalGlue()); // absorbs extra space  
 
         // BUTTON PANEL
         JPanel buttonPanel = new JPanel(new FlowLayout());
@@ -45,9 +52,12 @@ public class LoginSignupUI {
         buttonPanel.add(loginBtn);
         buttonPanel.add(signupBtn);
 
-        frame.add(buttonPanel, BorderLayout.SOUTH);
+        centerWrapper.add(Box.createVerticalStrut(0));
+        centerWrapper.add(buttonPanel);
 
-        // ACTIONS
+        frame.add(centerWrapper, BorderLayout.CENTER);
+
+        // ACTIONS----------------------------------------------------------------------------------------------------
         loginBtn.addActionListener(e -> {
             String user = userField.getText();
             String pass = new String(passField.getPassword());
@@ -63,6 +73,7 @@ public class LoginSignupUI {
             frame.dispose();
             showSignup();
         });
+        // -----------------------------------------------------------------------------------------------------------
 
         frame.setVisible(true);
     }
