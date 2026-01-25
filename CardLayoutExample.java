@@ -40,7 +40,7 @@ public class CardLayoutExample {
         frame.setContentPane(cards); // Set the cards panel as the frame's content pane
         frame.pack(); // Resize the frame to fit components
         frame.setLocationRelativeTo(null); // Center the window
-        frame.setVisible(true);
+         
     }
 
     public static void main(String[] args) {

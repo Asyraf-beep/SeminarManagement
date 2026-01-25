@@ -5,6 +5,7 @@ import java.io.*;
 public class LoginSignupUI {
 
     static final String FILE_NAME = "users.txt";
+    
     public static void main(String[] args) {
         showLogin();
     }
@@ -12,7 +13,7 @@ public class LoginSignupUI {
     // LOGIN WINDOW
     static void showLogin() {
         
-        MyFrame frame = new MyFrame();
+        MyFrame frame = new MyFrame(620, 500);
         frame.setTitle("Login");
 
         // HEADER --------------------------------------------------------------------------------
@@ -97,7 +98,15 @@ public class LoginSignupUI {
             }
 
             if (checkLogin(user, pass, userRole)) {
+                String ID = getUserID(user, pass, userRole);
                 JOptionPane.showMessageDialog(frame, "Login Successful!");
+                frame.dispose();
+
+                if (userRole == 2) { // Coordinator
+                    new CoordDashboard(user, ID);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Dashboard not implemented yet for this role");
+                }
             } else {
                 JOptionPane.showMessageDialog(frame, "Invalid username or password or role");
             }
@@ -117,13 +126,13 @@ public class LoginSignupUI {
     // SIGN UP WINDOW ------------------------------------------------------------------------------------
     static void showSignup() {
 
-        MyFrame frame = new MyFrame();
+        MyFrame frame = new MyFrame(620, 500);
         frame.setTitle("Sign Up");
 
         // HEADER
         frame.add(new HeaderPanel(), BorderLayout.NORTH);
         JPanel formPanel = new JPanel(new GridLayout(5, 1, 0, 20));
-        JPanel userFieldPanel = new JPanel(new FlowLayout(FlowLayout.LEFT,20,20));
+        JPanel userFieldPanel = new JPanel(new FlowLayout(FlowLayout.LEFT,19,20));
         JPanel passFieldPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 0));
 
         userFieldPanel.add(new JLabel("Username: "));
@@ -134,8 +143,15 @@ public class LoginSignupUI {
         JPasswordField passField = new JPasswordField(12);
         passFieldPanel.add(passField);
 
+        JPanel IDPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 23, 0));
+        IDPanel.add(new JLabel("ID           : "));
+        JTextField IDField = new JTextField(12);
+        IDPanel.add(IDField);
+
+        IDPanel.setVisible(true);
         formPanel.add(userFieldPanel);
         formPanel.add(passFieldPanel);
+        formPanel.add(IDPanel);
 
         // USERTYPE SELECTION ----------------------------------------------------------------
         JRadioButton student = new JRadioButton("Student");
@@ -169,19 +185,32 @@ public class LoginSignupUI {
         signupBtn.addActionListener(e -> {
             String user = userField.getText();
             String pass = new String(passField.getPassword());
+            String rawID = IDField.getText();
+            String fullID;
+
+            if (student.isSelected()) {
+                fullID = "STU" + rawID;
+            } else if (coordinator.isSelected()) {
+                fullID = "COORD" + rawID;
+            } else {
+                fullID = "EV" + rawID;
+            }
+
             // Get selected user type
             String usertype = "Student"; // default
             if (coordinator.isSelected()) usertype = "Coordinator";
             else if (evaluator.isSelected()) usertype = "Evaluator";
 
-            if (!user.isEmpty() && !pass.isEmpty()) {
-                saveUser(user, pass, usertype);
-                JOptionPane.showMessageDialog(frame, "Account Created!");
-                frame.dispose();
-                showLogin();
-            } else {
-                JOptionPane.showMessageDialog(frame, "Fields cannot be left empty");
+            if (user.isEmpty() || pass.isEmpty() || fullID.isEmpty()) {
+
+                JOptionPane.showMessageDialog(frame, "Please fill in all required fields");
+                return;
             }
+
+            saveUser(user, pass, usertype, fullID);
+            JOptionPane.showMessageDialog(frame, "Account Created!");
+            frame.dispose();
+            showLogin();
         });
 
         backBtn.addActionListener(e ->{
@@ -194,9 +223,14 @@ public class LoginSignupUI {
 
 
     // SAVE USER TO FILE
-    static void saveUser(String username, String password, String usertype) {
+    static void saveUser(String username, String password, String usertype, String ID) {
+
+        // if (!usertype.equals("Student")) {
+        //     studentID = "-"; // placeholder for non-students
+        // }
+
         try (FileWriter fw = new FileWriter(FILE_NAME, true)) {
-            fw.write(username + "," + password + "," + usertype + "\n");
+            fw.write(username + "," + password + "," + usertype + "," + ID + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -209,6 +243,7 @@ public class LoginSignupUI {
             int userInt;
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(",");
+                if (data.length < 4) continue;
 
                 if (data[0].equals(username) && data[1].equals(password)) {
                     if (data[2].equals("Student")){
@@ -231,5 +266,27 @@ public class LoginSignupUI {
             return false;
         }
         return false;
+    }
+    static String getUserID(String username, String password, int userNum) {
+        try (BufferedReader br = new BufferedReader(new FileReader(FILE_NAME))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                if (data.length < 4) continue;
+
+                if (data[0].equals(username) && data[1].equals(password)) {
+                    int role;
+                    if (data[2].equals("Student")) role = 1;
+                    else if (data[2].equals("Coordinator")) role = 2;
+                    else role = 3;
+                    if (role == userNum) {
+                        return data[3]; //return ID from file
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

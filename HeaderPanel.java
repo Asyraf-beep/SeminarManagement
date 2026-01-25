@@ -1,7 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 
-public class HeaderPanel extends JPanel {
+public class HeaderPanel extends JPanel{
 
     public HeaderPanel() {
         setLayout(new FlowLayout(FlowLayout.CENTER,0,30));
