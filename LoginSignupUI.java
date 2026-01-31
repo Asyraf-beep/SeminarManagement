@@ -109,6 +109,8 @@ public class LoginSignupUI {
                 }
                 else if (userRole == 2) { // Coordinator
                     new CoordDashboard(user, ID);
+                } else if (userRole == 3) { // Evaluator
+                    new EvaluatorDashboard(user, ID);
                 } else {
                     JOptionPane.showMessageDialog(null, "Dashboard not implemented yet for this role");
                 }
