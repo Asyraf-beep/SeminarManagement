@@ -14,7 +14,6 @@ public class StudentUI {
 
     // File format (6 columns):
     // studentID,presentationType,title,description,researchTitle,supervisorName
-    static final String PRESENTATION_FILE = "presentations.txt";
 
     public StudentUI(Student student, Presentation presentation) {
         this.student = student;
@@ -282,42 +281,55 @@ public class StudentUI {
         frame.setVisible(true);
     }
 
+    // private static void loadPresentationFromFile(Student student, Presentation presentation) {
+    //     File f = new File(PRESENTATION_FILE);
+    //     if (!f.exists()) return;
+
+    //     try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+    //         String line;
+    //         while ((line = br.readLine()) != null) {
+    //             String[] p = line.split(",", -1);
+    //             if (p.length < 4) continue;
+
+    //             String id = p[0].trim();
+    //             if (!id.equals(student.getId().trim())) continue;
+
+    //             // Supports both old (4 columns) and new (6 columns) formats:
+    //             // id,type,title,desc[,researchTitle,supervisorName]
+    //             String type = p[1].trim();
+    //             String title = p[2].trim();
+    //             String desc = p[3].trim();
+
+    //             if (!type.isEmpty()) {
+    //                 student.setPresentationType(type);
+    //                 presentation.setPresentationType(type);
+    //             }
+    //             if (!title.isEmpty()) presentation.setTitle(title);
+    //             if (!desc.isEmpty()) presentation.setDescription(desc);
+
+    //             if (p.length >= 6) {
+    //                 String researchTitle = p[4].trim();
+    //                 String supervisor = p[5].trim();
+    //                 if (!researchTitle.isEmpty()) student.setResearchTitle(researchTitle);
+    //                 if (!supervisor.isEmpty()) student.setSupervisorName(supervisor);
+    //             }
+
+    //             return;
+    //         }
+    //     } catch (IOException ignored) {}
+    // }
     private static void loadPresentationFromFile(Student student, Presentation presentation) {
-        File f = new File(PRESENTATION_FILE);
-        if (!f.exists()) return;
+        PresentationRecord r = PresentationRecord.loadByStudentId(student.getId());
+        if (r == null) return;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] p = line.split(",", -1);
-                if (p.length < 4) continue;
-
-                String id = p[0].trim();
-                if (!id.equals(student.getId().trim())) continue;
-
-                // Supports both old (4 columns) and new (6 columns) formats:
-                // id,type,title,desc[,researchTitle,supervisorName]
-                String type = p[1].trim();
-                String title = p[2].trim();
-                String desc = p[3].trim();
-
-                if (!type.isEmpty()) {
-                    student.setPresentationType(type);
-                    presentation.setPresentationType(type);
-                }
-                if (!title.isEmpty()) presentation.setTitle(title);
-                if (!desc.isEmpty()) presentation.setDescription(desc);
-
-                if (p.length >= 6) {
-                    String researchTitle = p[4].trim();
-                    String supervisor = p[5].trim();
-                    if (!researchTitle.isEmpty()) student.setResearchTitle(researchTitle);
-                    if (!supervisor.isEmpty()) student.setSupervisorName(supervisor);
-                }
-
-                return;
-            }
-        } catch (IOException ignored) {}
+        if (!r.getType().isEmpty()) {
+            student.setPresentationType(r.getType());
+            presentation.setPresentationType(r.getType());
+        }
+        if (!r.getTitle().isEmpty()) presentation.setTitle(r.getTitle());
+        if (!r.getDescription().isEmpty()) presentation.setDescription(r.getDescription());
+        if (!r.getResearchTitle().isEmpty()) student.setResearchTitle(r.getResearchTitle());
+        if (!r.getSupervisorName().isEmpty()) student.setSupervisorName(r.getSupervisorName());
     }
 
     private static void uploadFile(JFrame frame, Presentation presentation) {
@@ -336,55 +348,69 @@ public class StudentUI {
         JOptionPane.showMessageDialog(frame, ok ? "File uploaded!" : "Upload failed.");
     }
 
+    // private static void savePresentation(Student student, Presentation presentation) {
+    //     File inputFile = new File(PRESENTATION_FILE);
+    //     File tempFile = new File("temp_presentations.txt");
+    //     boolean found = false;
+
+    //     try (
+    //             BufferedReader br = inputFile.exists() ? new BufferedReader(new FileReader(inputFile)) : null;
+    //             BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile))
+    //     ) {
+    //         if (br != null) {
+    //             String line;
+    //             while ((line = br.readLine()) != null) {
+    //                 String[] parts = line.split(",", -1);
+    //                 if (parts.length >= 1 && parts[0].trim().equals(student.getId().trim())) {
+    //                     // Always write the new 6-column format for this student
+    //                     bw.write(buildLine(student, presentation));
+    //                     bw.newLine();
+    //                     found = true;
+    //                 } else {
+    //                     bw.write(line);
+    //                     bw.newLine();
+    //                 }
+    //             }
+    //         }
+
+    //         if (!found) {
+    //             bw.write(buildLine(student, presentation));
+    //             bw.newLine();
+    //         }
+
+    //     } catch (IOException e) {
+    //         JOptionPane.showMessageDialog(null, "Failed to save presentation details.");
+    //         return;
+    //     }
+
+    //     if (inputFile.exists()) inputFile.delete();
+    //     tempFile.renameTo(inputFile);
+    // }
     private static void savePresentation(Student student, Presentation presentation) {
-        File inputFile = new File(PRESENTATION_FILE);
-        File tempFile = new File("temp_presentations.txt");
-        boolean found = false;
+        PresentationRecord r = new PresentationRecord(
+                student.getId(),
+                presentation.getPresentationType(),
+                presentation.getTitle(),
+                presentation.getDescription(),
+                student.getResearchTitle(),
+                student.getSupervisorName()
+        );
 
-        try (
-                BufferedReader br = inputFile.exists() ? new BufferedReader(new FileReader(inputFile)) : null;
-                BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile))
-        ) {
-            if (br != null) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",", -1);
-                    if (parts.length >= 1 && parts[0].trim().equals(student.getId().trim())) {
-                        // Always write the new 6-column format for this student
-                        bw.write(buildLine(student, presentation));
-                        bw.newLine();
-                        found = true;
-                    } else {
-                        bw.write(line);
-                        bw.newLine();
-                    }
-                }
-            }
-
-            if (!found) {
-                bw.write(buildLine(student, presentation));
-                bw.newLine();
-            }
-
-        } catch (IOException e) {
+        if (!PresentationRecord.upsert(r)) {
             JOptionPane.showMessageDialog(null, "Failed to save presentation details.");
-            return;
         }
-
-        if (inputFile.exists()) inputFile.delete();
-        tempFile.renameTo(inputFile);
     }
 
-    private static String buildLine(Student student, Presentation presentation) {
-        return safe(student.getId()) + "," +
-                safe(presentation.getPresentationType()) + "," +
-                safe(presentation.getTitle()) + "," +
-                safe(presentation.getDescription()) + "," +
-                safe(student.getResearchTitle()) + "," +
-                safe(student.getSupervisorName());
-    }
+    // private static String buildLine(Student student, Presentation presentation) {
+    //     return safe(student.getId()) + "," +
+    //             safe(presentation.getPresentationType()) + "," +
+    //             safe(presentation.getTitle()) + "," +
+    //             safe(presentation.getDescription()) + "," +
+    //             safe(student.getResearchTitle()) + "," +
+    //             safe(student.getSupervisorName());
+    // }
 
-    private static String safe(String s) {
-        return s == null ? "" : s.replace(",", " ").trim();
-    }
+    // private static String safe(String s) {
+    //     return s == null ? "" : s.replace(",", " ").trim();
+    // }
 }
