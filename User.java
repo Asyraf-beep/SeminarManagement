@@ -10,7 +10,6 @@ public class User {
     // Protected attributes - accessible by child classes
     protected String username;
     protected String name;
-    protected String email_address;
     protected String password;
     protected String usertype; // "Student", "Evaluator", or "Coordinator"
     
@@ -23,7 +22,6 @@ public class User {
     public User(String username, String name, String email_address, String password, String usertype) {
         this.username = username;
         this.name = name;
-        this.email_address = email_address;
         this.password = password;
         this.usertype = usertype;
     }
@@ -35,7 +33,7 @@ public class User {
     public boolean signUp() {
         try (FileWriter fw = new FileWriter(USER_FILE, true)) {
             fw.write(String.format("%s,%s,%s,%s,%s\n",
-                username, name, email_address, password, usertype));
+                username, name, password, usertype));
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -100,9 +98,8 @@ public class User {
     /**
      * Modify account details
      */
-    public boolean modifyAccount(String newName, String newEmail, String newPassword) {
+    public boolean modifyAccount(String newName, String newPassword) {
         this.name = newName;
-        this.email_address = newEmail;
         this.password = newPassword;
         
         // Update in file
@@ -115,7 +112,7 @@ public class User {
                 if (data[0].equals(username)) {
                     // Replace with updated info
                     lines.add(String.format("%s,%s,%s,%s,%s",
-                        username, newName, newEmail, newPassword, usertype));
+                        username, newName, newPassword, usertype));
                 } else {
                     lines.add(line);
                 }
@@ -140,12 +137,10 @@ public class User {
     // Getters
     public String getUsername() { return username; }
     public String getName() { return name; }
-    public String getEmail_address() { return email_address; }
     public String getPassword() { return password; }
     public String getUsertype() { return usertype; }
     
     // Setters (if needed)
     public void setName(String name) { this.name = name; }
-    public void setEmail_address(String email) { this.email_address = email; }
     public void setPassword(String password) { this.password = password; }
 }

@@ -1,2 +1,2 @@
 
-SES003,STU008,raf,39,4,5,10,15,5,Could be better
+SES001,yaro (STU008),asyraf,67,15,15,10,15,12,Its good

@@ -1,49 +1,35 @@
-public class Student {
-
-    private String id;
+public class Student extends User {
+    private String studentId;
     private String researchTitle;
     private String supervisorName;
-    private Presentation presentation;
-    private String presentationType ;
+    private String presentationType;
 
-    public Student(String id, String researchTitle,
-                   String supervisorName, String presentationType) {
-
-        this.id = id;
-        this.researchTitle = researchTitle;
-        this.supervisorName = supervisorName;
-        this.presentationType = presentationType ;
+    public Student(String username, String name, String email, String password, String studentId) {
+        super(username, name, email, password, "Student");
+        this.studentId = studentId;
+        this.presentationType = "Poster";
     }
 
-    public Student(String id) {
-
-        this.id = id;
-        this.researchTitle = null;
-        this.supervisorName = null;
-        this.presentationType = "poster" ;
+    // If you still want the simple constructor:
+    public Student(String studentId) {
+        super(null, null, null, null, "Student");
+        this.studentId = studentId;
+        this.presentationType = "Poster";
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getId() { return studentId; }
 
     public String getResearchTitle() { return researchTitle; }
-    public void setResearchTitle(String researchTitle) {
-        this.researchTitle = researchTitle;
-    }
+    public void setResearchTitle(String researchTitle) { this.researchTitle = researchTitle; }
 
     public String getSupervisorName() { return supervisorName; }
-    public void setSupervisorName(String supervisorName) {
-        this.supervisorName = supervisorName;
-    }
+    public void setSupervisorName(String supervisorName) { this.supervisorName = supervisorName; }
 
-    public String getPresentationType() { return presentationType ; }
-
-    public void setPresentationType(String presentationType) {
-        this.presentationType = presentationType;
-    }
+    public String getPresentationType() { return presentationType; }
+    public void setPresentationType(String presentationType) { this.presentationType = presentationType; }
 
     public String studentDetails() {
-        return "Student ID: " + id
+        return "Student ID: " + studentId
                 + "\nResearch Title: " + researchTitle
                 + "\nSupervisor Name: " + supervisorName
                 + "\nPresentation Type: " + presentationType;

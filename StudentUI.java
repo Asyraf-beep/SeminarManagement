@@ -220,6 +220,44 @@ public class StudentUI {
         presentation.uploadPresentation(chooser.getSelectedFile());
     }
 
+    // private static void savePresentation(Student student, Presentation presentation) {
+    //     File inputFile = new File(PRESENTATION_FILE);
+    //     File tempFile = new File("temp_presentations.txt");
+    //     boolean found = false;
+
+    //     try (
+    //             BufferedReader br = inputFile.exists() ? new BufferedReader(new FileReader(inputFile)) : null;
+    //             BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile))
+    //     ) {
+    //         if (br != null) {
+    //             String line;
+    //             while ((line = br.readLine()) != null) {
+    //                 String[] parts = line.split(",", -1);
+    //                 if (parts.length >= 1 && parts[0].trim().equals(student.getId().trim())) {
+    //                     // Always write the new 6-column format for this student
+    //                     bw.write(buildLine(student, presentation));
+    //                     bw.newLine();
+    //                     found = true;
+    //                 } else {
+    //                     bw.write(line);
+    //                     bw.newLine();
+    //                 }
+    //             }
+    //         }
+
+    //         if (!found) {
+    //             bw.write(buildLine(student, presentation));
+    //             bw.newLine();
+    //         }
+
+    //     } catch (IOException e) {
+    //         JOptionPane.showMessageDialog(null, "Failed to save presentation details.");
+    //         return;
+    //     }
+
+    //     if (inputFile.exists()) inputFile.delete();
+    //     tempFile.renameTo(inputFile);
+    // }
     private static void savePresentation(Student student, Presentation presentation) {
         File input = new File(PRESENTATION_FILE);
         File temp = new File("temp_presentations.txt");

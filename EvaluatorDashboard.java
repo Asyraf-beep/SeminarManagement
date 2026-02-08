@@ -230,54 +230,73 @@ public class EvaluatorDashboard {
 
     // --- DATA HELPERS ---
 
+    // private void loadAssignedSessions(DefaultTableModel model) {
+    //     model.setRowCount(0);
+
+    //     // sessionID -> studentID (presenter)
+    //     Map<String, String> sessionToStudent = new HashMap<>();
+
+    //     // 1) Read assignments.txt and collect sessions assigned to THIS evaluatorID
+    //     try (BufferedReader br = new BufferedReader(new FileReader(ASSIGNMENT_FILE))) {
+    //         String line;
+    //         while ((line = br.readLine()) != null) {
+    //             String[] parts = line.split(",", -1);
+    //             if (parts.length < 3) continue;
+
+    //             String sessionID = parts[0].trim();
+    //             String evaluatorIDs = parts[1].trim(); // "EV113;EV123"
+    //             String studentID = parts[2].trim();    // "STU008"
+
+    //             if (hasId(evaluatorIDs, evaluatorID)) {
+    //                 sessionToStudent.put(sessionID, studentID);
+    //             }
+    //         }
+    //     } catch (IOException ignored) {}
+
+    //     // 2) Read sessions.txt and display only those sessions
+    //     try (BufferedReader br = new BufferedReader(new FileReader(SESSION_FILE))) {
+    //         String line;
+    //         while ((line = br.readLine()) != null) {
+    //             String[] data = line.split(",", -1);
+    //             if (data.length < 7) continue;
+
+    //             String sid = data[0].trim();
+    //             if (!sessionToStudent.containsKey(sid)) continue;
+
+    //             String date = data[2].trim();
+    //             String location = data[5].trim();
+    //             String type = data[6].trim();
+
+    //             String presenter = sessionToStudent.get(sid); // studentID (as stored)
+
+    //             model.addRow(new Object[]{
+    //                     sid,
+    //                     date,
+    //                     presenter,
+    //                     location,
+    //                     type
+    //             });
+    //         }
+    //     } catch (IOException ignored) {}
+    // }
     private void loadAssignedSessions(DefaultTableModel model) {
         model.setRowCount(0);
 
-        // sessionID -> studentID (presenter)
-        Map<String, String> sessionToStudent = new HashMap<>();
+        java.util.Map<String, String> idToUser = buildIdToUsername();
 
-        // 1) Read assignments.txt and collect sessions assigned to THIS evaluatorID
-        try (BufferedReader br = new BufferedReader(new FileReader(ASSIGNMENT_FILE))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(",", -1);
-                if (parts.length < 3) continue;
+        java.util.List<AssignmentRecord> mine = AssignmentRecord.findByEvaluatorId(evaluatorID);
+        for (AssignmentRecord a : mine) {
+            SessionRecord s = SessionRecord.findById(a.getSessionId());
+            if (s == null) continue;
 
-                String sessionID = parts[0].trim();
-                String evaluatorIDs = parts[1].trim(); // "EV113;EV123"
-                String studentID = parts[2].trim();    // "STU008"
-
-                if (hasId(evaluatorIDs, evaluatorID)) {
-                    sessionToStudent.put(sessionID, studentID);
-                }
-            }
-        } catch (IOException ignored) {}
-
-        // 2) Read sessions.txt and display only those sessions
-        try (BufferedReader br = new BufferedReader(new FileReader(SESSION_FILE))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split(",", -1);
-                if (data.length < 7) continue;
-
-                String sid = data[0].trim();
-                if (!sessionToStudent.containsKey(sid)) continue;
-
-                String date = data[2].trim();
-                String location = data[5].trim();
-                String type = data[6].trim();
-
-                String presenter = sessionToStudent.get(sid); // studentID (as stored)
-
-                model.addRow(new Object[]{
-                        sid,
-                        date,
-                        presenter,
-                        location,
-                        type
-                });
-            }
-        } catch (IOException ignored) {}
+            model.addRow(new Object[]{
+                    s.getSessionId(),
+                    s.getDate(),
+                    presenterDisplay(a.getPresenterId(), idToUser),
+                    s.getLocation(),
+                    s.getType()
+            });
+        }
     }
 
     private boolean hasId(String idList, String targetId) {
@@ -289,97 +308,165 @@ public class EvaluatorDashboard {
         return false;
     }
 
-    private String getPresenterForSession(String sessionID) {
-        try (BufferedReader br = new BufferedReader(new FileReader(ASSIGNMENT_FILE))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(",", -1);
-                if (parts.length < 3) continue;
+    // private String getPresenterForSession(String sessionID) {
+    //     try (BufferedReader br = new BufferedReader(new FileReader(ASSIGNMENT_FILE))) {
+    //         String line;
+    //         while ((line = br.readLine()) != null) {
+    //             String[] parts = line.split(",", -1);
+    //             if (parts.length < 3) continue;
 
-                if (parts[0].trim().equals(sessionID)) {
-                    return parts[2].trim(); // studentID
-                }
-            }
-        } catch (IOException ignored) {}
-        return "N/A";
+    //             if (parts[0].trim().equals(sessionID)) {
+    //                 return parts[2].trim(); // studentID
+    //             }
+    //         }
+    //     } catch (IOException ignored) {}
+    //     return "N/A";
+    // }
+    private String getPresenterForSession(String sessionID) {
+        AssignmentRecord a = AssignmentRecord.findBySessionId(sessionID);
+        if (a == null) return "N/A";
+        java.util.Map<String, String> idToUser = buildIdToUsername();
+        return presenterDisplay(a.getPresenterId(), idToUser);
     }
 
+    // private void loadSessionDropdown(JComboBox<String> box, JTextField studentField) {
+    //     box.removeAllItems();
+
+    //     // sessionID -> studentID
+    //     Map<String, String> sessionToStudent = new HashMap<>();
+
+    //     try (BufferedReader br = new BufferedReader(new FileReader(ASSIGNMENT_FILE))) {
+    //         String line;
+    //         while ((line = br.readLine()) != null) {
+    //             String[] parts = line.split(",", -1);
+    //             if (parts.length < 3) continue;
+
+    //             String sessionID = parts[0].trim();
+    //             String evaluatorIDs = parts[1].trim();
+    //             String studentID = parts[2].trim();
+
+    //             if (hasId(evaluatorIDs, evaluatorID)) {
+    //                 sessionToStudent.put(sessionID, studentID);
+    //             }
+    //         }
+    //     } catch (IOException ignored) {}
+
+    //     // Fill dropdown
+    //     for (String sid : sessionToStudent.keySet()) {
+    //         box.addItem(sid);
+    //     }
+
+    //     // Auto-fill student for initial selection
+    //     if (box.getItemCount() > 0) {
+    //         String first = (String) box.getItemAt(0);
+    //         studentField.setText(sessionToStudent.getOrDefault(first, "N/A"));
+    //     }
+
+    //     // Update student when session changes
+    //     box.addActionListener(e -> {
+    //         String sid = (String) box.getSelectedItem();
+    //         if (sid != null) {
+    //             studentField.setText(sessionToStudent.getOrDefault(sid, "N/A"));
+    //         }
+    //     });
+    // }
     private void loadSessionDropdown(JComboBox<String> box, JTextField studentField) {
         box.removeAllItems();
 
-        // sessionID -> studentID
-        Map<String, String> sessionToStudent = new HashMap<>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(ASSIGNMENT_FILE))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(",", -1);
-                if (parts.length < 3) continue;
-
-                String sessionID = parts[0].trim();
-                String evaluatorIDs = parts[1].trim();
-                String studentID = parts[2].trim();
-
-                if (hasId(evaluatorIDs, evaluatorID)) {
-                    sessionToStudent.put(sessionID, studentID);
-                }
-            }
-        } catch (IOException ignored) {}
-
-        // Fill dropdown
-        for (String sid : sessionToStudent.keySet()) {
-            box.addItem(sid);
+        java.util.List<AssignmentRecord> mine = AssignmentRecord.findByEvaluatorId(evaluatorID);
+        for (AssignmentRecord a : mine) {
+            box.addItem(a.getSessionId());
         }
 
-        // Auto-fill student for initial selection
+        // set student field for first item
         if (box.getItemCount() > 0) {
             String first = (String) box.getItemAt(0);
-            studentField.setText(sessionToStudent.getOrDefault(first, "N/A"));
-        }
-
-        // Update student when session changes
-        box.addActionListener(e -> {
-            String sid = (String) box.getSelectedItem();
-            if (sid != null) {
-                studentField.setText(sessionToStudent.getOrDefault(sid, "N/A"));
-            }
-        });
-    }
-
-    private void saveEvaluation(String sessionID, String student, String evaluator, int finalMark, 
-                              int rq, int res, int meth, int pres, int orig, String comments) {
-        // Format: SessionID,StudentName,EvaluatorName,FinalMark,ResearchQ,Result,Methodology,Presentation,Originality,Comments
-        try (FileWriter fw = new FileWriter(EVALUATION_FILE, true)) {
-            fw.write(String.format("%s,%s,%s,%d,%d,%d,%d,%d,%d,%s\n",
-                    sessionID, student, evaluator, finalMark, rq, res, meth, pres, orig, comments));
-        } catch (IOException e) {
-            e.printStackTrace();
+            studentField.setText(getPresenterForSession(first));
         }
     }
 
+    // private void saveEvaluation(String sessionID, String student, String evaluator, int finalMark, 
+    //                           int rq, int res, int meth, int pres, int orig, String comments) {
+    //     // Format: SessionID,StudentName,EvaluatorName,FinalMark,ResearchQ,Result,Methodology,Presentation,Originality,Comments
+    //     try (FileWriter fw = new FileWriter(EVALUATION_FILE, true)) {
+    //         fw.write(String.format("%s,%s,%s,%d,%d,%d,%d,%d,%d,%s\n",
+    //                 sessionID, student, evaluator, finalMark, rq, res, meth, pres, orig, comments));
+    //     } catch (IOException e) {
+    //         e.printStackTrace();
+    //     }
+    // }
+    private void saveEvaluation(String sessionID, String student, String evaluator, int finalMark,
+        int rq, int res, int meth, int pres, int orig, String comments) {
+
+        EvaluationRecord r = new EvaluationRecord(sessionID, student, evaluator,
+                finalMark, rq, res, meth, pres, orig, comments);
+
+        if (!EvaluationRecord.append(r)) {
+            JOptionPane.showMessageDialog(frame, "Failed to save evaluation.");
+        }
+    }
+
+    // private void loadEvaluationHistory(DefaultTableModel model) {
+    //     model.setRowCount(0);
+    //     File file = new File(EVALUATION_FILE);
+    //     if (!file.exists()) return;
+
+    //     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+    //         String line;
+    //         while ((line = br.readLine()) != null) {
+    //             String[] parts = line.split(",");
+    //             if (parts.length < 10) continue;
+                
+    //             // Filter by evaluator? Or show all? Usually evaluator sees only their own.
+    //             // Or maybe they can see all for the session. Let's show only their own for now.
+    //             if (parts[2].equals(username)) {
+    //                 model.addRow(new Object[]{
+    //                     parts[0], // Session
+    //                     parts[1], // Student
+    //                     parts[2], // Evaluator
+    //                     parts[3], // Final Mark
+    //                     parts[9]  // Comments
+    //                 });
+    //             }
+    //         }
+    //     } catch (IOException ignored) {}
+    // }
+    
     private void loadEvaluationHistory(DefaultTableModel model) {
         model.setRowCount(0);
-        File file = new File(EVALUATION_FILE);
-        if (!file.exists()) return;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        for (EvaluationRecord r : EvaluationRecord.loadByEvaluatorName(username)) {
+            model.addRow(new Object[]{
+                    r.getSessionId(),
+                    r.getStudentId(),
+                    r.getEvaluatorName(),
+                    r.getTotal(),
+                    r.getComments()
+            });
+        }
+    }
+
+    private java.util.Map<String, String> buildIdToUsername() {
+        java.util.Map<String, String> map = new java.util.HashMap<>();
+        File f = new File(USER_FILE);
+        if (!f.exists()) return map;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while ((line = br.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length < 10) continue;
-                
-                // Filter by evaluator? Or show all? Usually evaluator sees only their own.
-                // Or maybe they can see all for the session. Let's show only their own for now.
-                if (parts[2].equals(username)) {
-                    model.addRow(new Object[]{
-                        parts[0], // Session
-                        parts[1], // Student
-                        parts[2], // Evaluator
-                        parts[3], // Final Mark
-                        parts[9]  // Comments
-                    });
+                String[] p = line.split(",", -1);
+                // your users.txt in coordinator code was: username,password,role,ID
+                if (p.length >= 4) {
+                    map.put(p[3].trim(), p[0].trim()); // id -> username
                 }
             }
         } catch (IOException ignored) {}
+        return map;
+    }
+
+    private String presenterDisplay(String presenterId, java.util.Map<String, String> idToUser) {
+        if (presenterId == null || presenterId.trim().isEmpty()) return "N/A";
+        String u = idToUser.getOrDefault(presenterId.trim(), "unknown");
+        return u + " (" + presenterId.trim() + ")";
     }
 }
