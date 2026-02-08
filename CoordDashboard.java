@@ -29,6 +29,7 @@ public class CoordDashboard {
         this.username = username;
         this.coordID = coordID;
         frame = new MyFrame(750, 600);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setTitle("Coordinator Dashboard");
         frame.setLayout(new BorderLayout());
 
@@ -91,6 +92,24 @@ public class CoordDashboard {
     private JPanel createMainPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Main Menu"));
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        JLabel welcomeLabel = new JLabel(
+                "WELCOME " + username + "! YOUR ROLE IS COORDINATOR"
+        );
+        welcomeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        panel.add(Box.createVerticalGlue());
+        panel.add(welcomeLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+
+        JButton logoutBtn = new JButton("Logout");
+        logoutBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        logoutBtn.addActionListener(e -> {
+            frame.dispose();                 // close coordinator dashboard
+            LoginSignupUI.showLogin();       // go back to the real login screen (same as Evaluator)
+        });
 
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
@@ -186,16 +205,15 @@ public class CoordDashboard {
         JButton createBtn = new JButton("Create Session");
         form.add(createBtn, gbc);
         panel.add(form, BorderLayout.NORTH);
-        
 
         // ---------- SESSION TABLE ----------
         String[] columnNames = {
-            "Session ID",
-            "Coordinator Name",
-            "Date",
-            "Time",
-            "Location",
-            "Presentation Type"
+                "Session ID",
+                "Coordinator Name",
+                "Date",
+                "Time",
+                "Location",
+                "Presentation Type"
         };
 
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
@@ -260,7 +278,7 @@ public class CoordDashboard {
             loadSessionsIntoTable(tableModel);
         });
 
-    return panel;
+        return panel;
     }
 
     // session create a new unique ID
@@ -268,26 +286,6 @@ public class CoordDashboard {
         return SessionRecord.generateNextId();
     }
 
-    // Read from the sessions.txt file and put into table
-    // public static void loadSessionsIntoTable(DefaultTableModel model) {
-    //     model.setRowCount(0);
-    //     try (BufferedReader br = new BufferedReader(new FileReader(SESSION_FILE))) {
-    //         String line;
-    //         while ((line = br.readLine()) != null) {
-    //             String[] data = line.split(",");
-    //             if (data.length < 7) continue;
-
-    //             model.addRow(new Object[]{
-    //                     data[0], // Session ID
-    //                     data[1], // Host Name
-    //                     data[2], // Date
-    //                     data[3] + " - " + data[4], // Time
-    //                     data[5], // Location
-    //                     data[6] // Type
-    //             });
-    //         }
-    //     } catch (IOException ignored) {}
-    // }
     public static void loadSessionsIntoTable(DefaultTableModel model) {
         model.setRowCount(0);
         for (SessionRecord s : SessionRecord.loadAll()) {
@@ -302,16 +300,6 @@ public class CoordDashboard {
         }
     }
 
-    // Write into session.txt
-    // public static void saveSession(String hostName, String date, String start, String end, String location, String type) {
-    //     String sessionID = generateSessionID(); // auto-generate ID
-    //     try (FileWriter fw = new FileWriter(SESSION_FILE, true)) {
-    //         fw.write(sessionID + "," + hostName + "," + date + "," + start + "," + end + "," +
-    //                 location + "," + type + "\n");
-    //     } catch (IOException e) {
-    //         e.printStackTrace();
-    //     }
-    // }
     public static void saveSession(String hostName, String date, String start, String end, String location, String type) {
         String sessionID = SessionRecord.generateNextId();
         SessionRecord s = new SessionRecord(sessionID, hostName, date, start, end, location, type);
@@ -321,42 +309,13 @@ public class CoordDashboard {
         }
     }
 
-    // delete session from file
-    // static void deleteSession(int indexToDelete) {
-    //     try {
-    //         File inputFile = new File(SESSION_FILE);
-    //         File tempFile = new File("temp_sessions.txt");
-
-    //         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-    //         BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
-
-    //         String line;
-    //         int index = 0;
-
-    //         while ((line = reader.readLine()) != null) {
-    //             if (index != indexToDelete) {
-    //                 writer.write(line);
-    //                 writer.newLine();
-    //             }
-    //             index++;
-    //         }
-    //         reader.close();
-    //         writer.close();
-
-    //         inputFile.delete();
-    //         tempFile.renameTo(inputFile);
-
-    //     } catch (IOException e) {
-    //         e.printStackTrace();
-    //     }
-    // } 
     static void deleteSession(int indexToDelete) {
         SessionRecord.deleteByIndex(indexToDelete);
     }
     // ------------------------------------------------- CREATE SESSION END -----------------------------------------------
 
     // --------------------------------------ASSIGN EVALUATORS AND STUDENTS------------------------------------------
-    private JPanel createAssignPanel() { 
+    private JPanel createAssignPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Assign Evaluators & Student Presenter"));
 
@@ -378,14 +337,12 @@ public class CoordDashboard {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         JButton addEvaluatorBtn = new JButton("Add Evaluator(s)");
         JButton setPresenterBtn = new JButton("Set Student Presenter");
-        
 
         buttonPanel.add(addEvaluatorBtn);
         buttonPanel.add(setPresenterBtn);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         // ---------- ACTIONS ----------
-
         addEvaluatorBtn.addActionListener(e -> {
             int selectedRow = assignTable.getSelectedRow();
             if (selectedRow == -1) {
@@ -447,25 +404,6 @@ public class CoordDashboard {
         return panel;
     }
 
-    // private void saveAssignments(JTable table) {
-    //     try (FileWriter fw = new FileWriter("assignments.txt")) {
-    //         DefaultTableModel model = (DefaultTableModel) table.getModel();
-
-    //         for (int i = 0; i < model.getRowCount(); i++) {
-    //             String sessionID = (String) model.getValueAt(i, 0);
-
-    //             String evaluators = (String) model.getValueAt(i, 2);
-    //             if (evaluators == null) evaluators = "";
-
-    //             String presenter = (String) model.getValueAt(i, 3);
-    //             if (presenter == null) presenter = "";
-
-    //             fw.write(sessionID + "," + evaluators + "," + presenter + "\n");
-    //         }
-    //     } catch (IOException e) {
-    //         e.printStackTrace();
-    //     }
-    // }
     private void saveAssignments(JTable table) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         java.util.List<AssignmentRecord> list = new java.util.ArrayList<>();
@@ -517,37 +455,6 @@ public class CoordDashboard {
         return s.substring(l + 1, r).trim();
     }
 
-    // private void loadAssignments(DefaultTableModel model) {
-    //     model.setRowCount(0); // clear table
-    //     // Load session info from sessions.txt
-    //     try (BufferedReader br = new BufferedReader(new FileReader(SESSION_FILE))) {
-    //         String line;
-    //         while ((line = br.readLine()) != null) {
-    //             String[] data = line.split(",");
-    //             if (data.length < 7) continue;
-    //             String sessionID = data[0];
-    //             String date = data[2];
-
-    //             // Load existing assignments if available
-    //             String evaluators = "";
-    //             String presenter = "";
-    //             File assignFile = new File("assignments.txt");
-    //             if (assignFile.exists()) {
-    //                 try (BufferedReader abr = new BufferedReader(new FileReader(assignFile))) {
-    //                     String aLine;
-    //                     while ((aLine = abr.readLine()) != null) {
-    //                         String[] aData = aLine.split(",", -1); // sessionID,evaluators,presenter
-    //                         if (aData.length >= 3 && aData[0].equals(sessionID)) {
-    //                             evaluators = aData[1];
-    //                             presenter = aData[2];
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //             model.addRow(new Object[]{sessionID, date, evaluators, presenter});
-    //         }
-    //     } catch (IOException ignored) {}
-    // }
     private void loadAssignments(DefaultTableModel model) {
         model.setRowCount(0);
 
@@ -566,8 +473,7 @@ public class CoordDashboard {
             });
         }
     }
-// ---------------------------------------------------------END ASSIGN PANEL --------------------------------------------
-
+    // ---------------------------------------------------------END ASSIGN PANEL --------------------------------------------
 
     // --------------------------------------- CREATE REPORT PANEL -----------------------------------------------------
     private JPanel createReportPanel() {
@@ -763,6 +669,8 @@ public class CoordDashboard {
     // ---------------------------------- END REPORT CLASS ----------------------------------------------------------------------
 
     // ---------------------------------AWARD PANEL -----------------------------------------------------------------------------
+
+// ---------------------------------AWARD PANEL -----------------------------------------------------------------------------
     private JPanel createAwardPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Award Delegation"));
@@ -798,17 +706,20 @@ public class CoordDashboard {
 
             java.util.Map<String, String> idToUser = loadIdToUsernameMap(LoginSignupUI.FILE_NAME);
 
-            // fill dropdown from evaluations
+            // Dropdown from evaluated student IDs, but sanitize IDs first
             choiceBox.removeAllItems();
-            for (String sid : AwardRecord.loadEvaluatedStudentIds()) {
-                String uname = idToUser.getOrDefault(sid, "unknown");
+            for (String rawSid : AwardRecord.loadEvaluatedStudentIds()) {
+                String sid = sanitizeStudentId(rawSid);
+                String uname = idToUser.get(sid);
+                if (uname == null || uname.trim().isEmpty()) {
+                    uname = sid; // show id if username missing
+                }
                 choiceBox.addItem(uname + " (" + sid + ")");
             }
 
             bestOral[0] = AwardRecord.pickBestForType("Oral");
             bestPoster[0] = AwardRecord.pickBestForType("Poster");
 
-            // show
             output.setText("");
             output.append("Best Oral Presentation:\n" + (bestOral[0] == null ? "None\n" : bestOral[0].toDisplay()) + "\n\n");
             output.append("Best Poster:\n" + (bestPoster[0] == null ? "None\n" : bestPoster[0].toDisplay()) + "\n\n");
@@ -822,12 +733,11 @@ public class CoordDashboard {
                 return;
             }
 
-            // Extract ID from "username (STUxxx)"
             String item = (String) choiceBox.getSelectedItem();
-            String sid = extractIdFromCombo(item);
 
-            java.util.Map<String, String> idToUser = loadIdToUsernameMap(LoginSignupUI.FILE_NAME);
-            String uname = idToUser.getOrDefault(sid, "unknown");
+            // item is "username (STUXXX)" because we build it that way above
+            String sid = sanitizeStudentId(extractIdFromCombo(item));
+            String uname = extractUsernameFromCombo(item);
 
             AwardRecord pc = new AwardRecord("People's Choice Award", "-", sid, uname, 0);
             peopleChoice[0] = pc;
@@ -844,7 +754,25 @@ public class CoordDashboard {
                 return;
             }
 
-            boolean ok = AwardRecord.saveWinners("awards.txt", bestOral[0], bestPoster[0], peopleChoice[0]);
+            // Sanitize oral/poster winners before saving so awards.txt is clean
+            java.util.Map<String, String> idToUser = loadIdToUsernameMap(LoginSignupUI.FILE_NAME);
+
+            AwardRecord oralToSave = null;
+            if (bestOral[0] != null) {
+                String sid = sanitizeStudentId(bestOral[0].getStudentId());
+                String uname = idToUser.getOrDefault(sid, "");
+                oralToSave = new AwardRecord(bestOral[0].getAward(), bestOral[0].getSessionId(), sid, uname, bestOral[0].getMark());
+            }
+
+            AwardRecord posterToSave = null;
+            if (bestPoster[0] != null) {
+                String sid = sanitizeStudentId(bestPoster[0].getStudentId());
+                String uname = idToUser.getOrDefault(sid, "");
+                posterToSave = new AwardRecord(bestPoster[0].getAward(), bestPoster[0].getSessionId(), sid, uname, bestPoster[0].getMark());
+            }
+
+            // People’s choice is already sanitized when set
+            boolean ok = AwardRecord.saveWinners("awards.txt", oralToSave, posterToSave, peopleChoice[0]);
             JOptionPane.showMessageDialog(frame, ok ? "Saved to awards.txt" : "Failed to save.");
         });
 
@@ -853,10 +781,40 @@ public class CoordDashboard {
 
     private String extractIdFromCombo(String item) {
         // expects "username (STUXXX)"
+        if (item == null) return "";
         int l = item.lastIndexOf('(');
         int r = item.lastIndexOf(')');
-        if (l == -1 || r == -1 || r <= l) return item;
+        if (l == -1 || r == -1 || r <= l) return item.trim();
         return item.substring(l + 1, r).trim();
+    }
+
+    private String extractUsernameFromCombo(String item) {
+        // expects "username (STUXXX)"
+        if (item == null) return "unknown";
+        int l = item.lastIndexOf('(');
+        if (l == -1) return item.trim();
+        String uname = item.substring(0, l).trim();
+        return uname.isEmpty() ? "unknown" : uname;
+    }
+
+    private String sanitizeStudentId(String raw) {
+        if (raw == null) return "";
+
+        String s = raw.trim();
+
+        // If it looks like "name (STU008)" then extract inside brackets
+        int l = s.lastIndexOf('(');
+        int r = s.lastIndexOf(')');
+        if (l != -1 && r != -1 && r > l) {
+            s = s.substring(l + 1, r).trim();
+        }
+
+        // Remove any leftover ')' if your data contains "STU008)"
+        while (s.endsWith(")")) {
+            s = s.substring(0, s.length() - 1).trim();
+        }
+
+        return s;
     }
 
     private java.util.Map<String, String> loadIdToUsernameMap(String usersFileName) {
@@ -868,13 +826,19 @@ public class CoordDashboard {
                 String[] data = line.split(",", -1);
                 if (data.length < 4) continue;
 
-                String username = data[0].trim();
+                String uname = data[0].trim();
                 String id = data[3].trim();
 
-                if (!id.isEmpty()) map.put(id, username);
+                if (!id.isEmpty()) {
+                    map.put(id, uname);
+                }
             }
         } catch (IOException ignored) {}
 
         return map;
     }
+
+
+
+
 }
