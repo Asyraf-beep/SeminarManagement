@@ -1,19 +1,12 @@
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 
 public class StudentUI {
 
     private Student student;
     private Presentation presentation;
 
-    // File format (6 columns):
-    // studentID,presentationType,title,description,researchTitle,supervisorName
     static final String PRESENTATION_FILE = "presentations.txt";
 
     public StudentUI(Student student, Presentation presentation) {
@@ -24,14 +17,13 @@ public class StudentUI {
 
     public static void StudentPage(Student student, Presentation presentation) {
 
-        // Load from file first (if record exists)
         loadPresentationFromFile(student, presentation);
 
         MyFrame frame = new MyFrame(750, 600);
         frame.setTitle("Student Dashboard");
-
         frame.add(new HeaderPanel(), BorderLayout.NORTH);
 
+        // ---------- TEXT AREAS ----------
         JTextArea studentInfoArea = new JTextArea(student.studentDetails());
         studentInfoArea.setEditable(false);
         studentInfoArea.setFont(new Font("Segoe UI", Font.PLAIN, 15));
@@ -65,6 +57,9 @@ public class StudentUI {
         detailsRow.add(presBox);
         detailsRow.setPreferredSize(new Dimension(0, 160));
 
+        // ---------- BUTTONS ----------
+        JButton logoutBtn = new JButton("Logout");
+        JButton detailBtn = new JButton("View Presentation Details");
         JButton setResearchTitleBtn = new JButton("Set Research Title");
         JButton setSupervisorBtn = new JButton("Set Supervisor Name");
         JButton viewSubmittedBtn = new JButton("View Submitted Presentation");
@@ -73,27 +68,36 @@ public class StudentUI {
         JButton setDescBtn = new JButton("Set Presentation Description");
         JButton uploadBtn = new JButton("Upload Slides");
         JButton deleteSlidesBtn = new JButton("Delete Slides");
-        JButton detailBtn = new JButton("View Presentation Details");
         JButton uploadPosterBtn = new JButton("Upload Poster");
         JButton deletePosterBtn = new JButton("Delete Poster");
 
         JPanel actionPanel = new JPanel(new GridLayout(0, 1, 0, 15));
-        actionPanel.add(detailBtn);
-        actionPanel.add(setResearchTitleBtn);
-        actionPanel.add(setSupervisorBtn);
-        actionPanel.add(viewSubmittedBtn);
-        actionPanel.add(setTypeBtn);
-        actionPanel.add(setTitleBtn);
-        actionPanel.add(setDescBtn);
 
-        if (student.getPresentationType().equals("Oral")) {
-            actionPanel.add(uploadBtn);
-            actionPanel.add(deleteSlidesBtn);
-        } else {
-            actionPanel.add(uploadPosterBtn);
-            actionPanel.add(deletePosterBtn);
-        }
+        Runnable rebuildActionPanel = () -> {
+            actionPanel.removeAll();
+            actionPanel.add(detailBtn);
+            actionPanel.add(setResearchTitleBtn);
+            actionPanel.add(setSupervisorBtn);
+            actionPanel.add(viewSubmittedBtn);
+            actionPanel.add(setTypeBtn);
+            actionPanel.add(setTitleBtn);
+            actionPanel.add(setDescBtn);
 
+            if (student.getPresentationType().equals("Oral")) {
+                actionPanel.add(uploadBtn);
+                actionPanel.add(deleteSlidesBtn);
+            } else {
+                actionPanel.add(uploadPosterBtn);
+                actionPanel.add(deletePosterBtn);
+            }
+
+            actionPanel.revalidate();
+            actionPanel.repaint();
+        };
+
+        rebuildActionPanel.run();
+
+        // ---------- MAIN LAYOUT ----------
         JPanel centerWrapper = new JPanel();
         centerWrapper.setLayout(new BoxLayout(centerWrapper, BoxLayout.Y_AXIS));
         centerWrapper.setBorder(
@@ -103,20 +107,27 @@ public class StudentUI {
                 )
         );
 
-        centerWrapper.add(Box.createVerticalStrut(30));
+        // LOGOUT AT VERY TOP (ABOVE INFO BOXES)
+        logoutBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        centerWrapper.add(logoutBtn);
+        centerWrapper.add(Box.createVerticalStrut(20));
+
         centerWrapper.add(detailsRow);
         centerWrapper.add(Box.createVerticalStrut(20));
         centerWrapper.add(actionPanel);
         centerWrapper.add(Box.createVerticalGlue());
 
-        //scrollable frame
         JScrollPane scrollPane = new JScrollPane(centerWrapper);
-        scrollPane.setBorder(null); // keeps your UI clean
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16); // smoother scrolling
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         frame.add(scrollPane, BorderLayout.CENTER);
 
-        // ACTIONS
+        // ---------- ACTIONS ----------
+        logoutBtn.addActionListener(e -> {
+            frame.dispose();
+            LoginSignupUI.showLogin();
+        });
 
         uploadBtn.addActionListener(e -> uploadFile(frame, presentation));
         uploadPosterBtn.addActionListener(e -> uploadFile(frame, presentation));
@@ -135,68 +146,14 @@ public class StudentUI {
                 JOptionPane.showMessageDialog(frame, "Presentation file deleted!");
         });
 
-        setTitleBtn.addActionListener(e -> {
-            String newTitle = JOptionPane.showInputDialog(
-                    frame,
-                    "Enter Presentation Title:",
-                    presentation.getTitle()
-            );
-
-            if (newTitle == null) return;
-
-            newTitle = newTitle.trim();
-            if (newTitle.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Title cannot be empty.");
-                return;
-            }
-
-            presentation.setTitle(newTitle);
-            savePresentation(student, presentation);
-
-            presInfoArea.setText(presentation.presentationDetails());
-            JOptionPane.showMessageDialog(frame, "Title updated!");
-        });
-
-        setDescBtn.addActionListener(e -> {
-            JTextArea input = new JTextArea(6, 25);
-            input.setLineWrap(true);
-            input.setWrapStyleWord(true);
-            input.setText(presentation.getDescription());
-
-            int result = JOptionPane.showConfirmDialog(
-                    frame,
-                    new JScrollPane(input),
-                    "Enter Presentation Description",
-                    JOptionPane.OK_CANCEL_OPTION
-            );
-
-            if (result != JOptionPane.OK_OPTION) return;
-
-            String newDesc = input.getText().trim();
-            if (newDesc.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Description cannot be empty.");
-                return;
-            }
-
-            presentation.setDescription(newDesc);
-            savePresentation(student, presentation);
-
-            presInfoArea.setText(presentation.presentationDetails());
-            JOptionPane.showMessageDialog(frame, "Description updated!");
-        });
-
         setTypeBtn.addActionListener(e -> {
             String[] options = {"Oral", "Poster"};
             String choice = (String) JOptionPane.showInputDialog(
-                    frame,
-                    "Select Presentation Type:",
+                    frame, "Select Presentation Type:",
                     "Presentation Type",
                     JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    options,
-                    student.getPresentationType()
+                    null, options, student.getPresentationType()
             );
-
             if (choice == null) return;
 
             student.setPresentationType(choice);
@@ -205,76 +162,25 @@ public class StudentUI {
 
             studentInfoArea.setText(student.studentDetails());
             presInfoArea.setText(presentation.presentationDetails());
-
-            JOptionPane.showMessageDialog(frame, "Presentation type updated to: " + choice);
-
-            actionPanel.removeAll();
-            actionPanel.add(detailBtn);
-            actionPanel.add(setResearchTitleBtn);
-            actionPanel.add(setSupervisorBtn);
-            actionPanel.add(viewSubmittedBtn);
-            actionPanel.add(setTypeBtn);
-            actionPanel.add(setTitleBtn);
-            actionPanel.add(setDescBtn);
-
-            if (choice.equals("Oral")) {
-                actionPanel.add(uploadBtn);
-                actionPanel.add(deleteSlidesBtn);
-            } else {
-                actionPanel.add(uploadPosterBtn);
-                actionPanel.add(deletePosterBtn);
-            }
-
-            actionPanel.revalidate();
-            actionPanel.repaint();
+            rebuildActionPanel.run();
         });
 
         setResearchTitleBtn.addActionListener(e -> {
-            String newResearchTitle = JOptionPane.showInputDialog(
-                    frame,
-                    "Enter Research Title:",
-                    student.getResearchTitle()
-            );
-
-            if (newResearchTitle == null) return;
-
-            newResearchTitle = newResearchTitle.trim();
-            if (newResearchTitle.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Research title cannot be empty.");
-                return;
-            }
-
-            student.setResearchTitle(newResearchTitle);
+            String t = JOptionPane.showInputDialog(frame, "Enter Research Title:", student.getResearchTitle());
+            if (t == null || t.trim().isEmpty()) return;
+            student.setResearchTitle(t.trim());
             savePresentation(student, presentation);
-
             studentInfoArea.setText(student.studentDetails());
-            JOptionPane.showMessageDialog(frame, "Research title updated!");
         });
 
         setSupervisorBtn.addActionListener(e -> {
-            String newSupervisor = JOptionPane.showInputDialog(
-                    frame,
-                    "Enter Supervisor Name:",
-                    student.getSupervisorName()
-            );
-
-            if (newSupervisor == null) return;
-
-            newSupervisor = newSupervisor.trim();
-            if (newSupervisor.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Supervisor name cannot be empty.");
-                return;
-            }
-
-            student.setSupervisorName(newSupervisor);
+            String s = JOptionPane.showInputDialog(frame, "Enter Supervisor Name:", student.getSupervisorName());
+            if (s == null || s.trim().isEmpty()) return;
+            student.setSupervisorName(s.trim());
             savePresentation(student, presentation);
-
             studentInfoArea.setText(student.studentDetails());
-            JOptionPane.showMessageDialog(frame, "Supervisor name updated!");
         });
 
-        // You haven't implemented where the submitted file path is stored,
-        // so for now this button just shows the details again.
         viewSubmittedBtn.addActionListener(e ->
                 JOptionPane.showMessageDialog(frame, presentation.presentationDetails())
         );
@@ -282,6 +188,7 @@ public class StudentUI {
         frame.setVisible(true);
     }
 
+    // ---------- FILE HELPERS ----------
     private static void loadPresentationFromFile(Student student, Presentation presentation) {
         File f = new File(PRESENTATION_FILE);
         if (!f.exists()) return;
@@ -291,30 +198,17 @@ public class StudentUI {
             while ((line = br.readLine()) != null) {
                 String[] p = line.split(",", -1);
                 if (p.length < 4) continue;
+                if (!p[0].trim().equals(student.getId().trim())) continue;
 
-                String id = p[0].trim();
-                if (!id.equals(student.getId().trim())) continue;
-
-                // Supports both old (4 columns) and new (6 columns) formats:
-                // id,type,title,desc[,researchTitle,supervisorName]
-                String type = p[1].trim();
-                String title = p[2].trim();
-                String desc = p[3].trim();
-
-                if (!type.isEmpty()) {
-                    student.setPresentationType(type);
-                    presentation.setPresentationType(type);
-                }
-                if (!title.isEmpty()) presentation.setTitle(title);
-                if (!desc.isEmpty()) presentation.setDescription(desc);
+                student.setPresentationType(p[1].trim());
+                presentation.setPresentationType(p[1].trim());
+                presentation.setTitle(p[2].trim());
+                presentation.setDescription(p[3].trim());
 
                 if (p.length >= 6) {
-                    String researchTitle = p[4].trim();
-                    String supervisor = p[5].trim();
-                    if (!researchTitle.isEmpty()) student.setResearchTitle(researchTitle);
-                    if (!supervisor.isEmpty()) student.setSupervisorName(supervisor);
+                    student.setResearchTitle(p[4].trim());
+                    student.setSupervisorName(p[5].trim());
                 }
-
                 return;
             }
         } catch (IOException ignored) {}
@@ -322,42 +216,28 @@ public class StudentUI {
 
     private static void uploadFile(JFrame frame, Presentation presentation) {
         JFileChooser chooser = new JFileChooser();
-        int result = chooser.showOpenDialog(frame);
-
-        if (result != JFileChooser.APPROVE_OPTION) return;
-
-        File file = chooser.getSelectedFile();
-        if (file == null || !file.exists()) {
-            JOptionPane.showMessageDialog(frame, "Invalid file.");
-            return;
-        }
-
-        boolean ok = presentation.uploadPresentation(file);
-        JOptionPane.showMessageDialog(frame, ok ? "File uploaded!" : "Upload failed.");
+        if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION) return;
+        presentation.uploadPresentation(chooser.getSelectedFile());
     }
 
     private static void savePresentation(Student student, Presentation presentation) {
-        File inputFile = new File(PRESENTATION_FILE);
-        File tempFile = new File("temp_presentations.txt");
-        boolean found = false;
+        File input = new File(PRESENTATION_FILE);
+        File temp = new File("temp_presentations.txt");
 
         try (
-                BufferedReader br = inputFile.exists() ? new BufferedReader(new FileReader(inputFile)) : null;
-                BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile))
+                BufferedReader br = input.exists() ? new BufferedReader(new FileReader(input)) : null;
+                BufferedWriter bw = new BufferedWriter(new FileWriter(temp))
         ) {
+            boolean found = false;
+
             if (br != null) {
                 String line;
                 while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(",", -1);
-                    if (parts.length >= 1 && parts[0].trim().equals(student.getId().trim())) {
-                        // Always write the new 6-column format for this student
+                    if (line.startsWith(student.getId() + ",")) {
                         bw.write(buildLine(student, presentation));
-                        bw.newLine();
                         found = true;
-                    } else {
-                        bw.write(line);
-                        bw.newLine();
-                    }
+                    } else bw.write(line);
+                    bw.newLine();
                 }
             }
 
@@ -366,25 +246,18 @@ public class StudentUI {
                 bw.newLine();
             }
 
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Failed to save presentation details.");
-            return;
-        }
+        } catch (IOException ignored) {}
 
-        if (inputFile.exists()) inputFile.delete();
-        tempFile.renameTo(inputFile);
+        if (input.exists()) input.delete();
+        temp.renameTo(input);
     }
 
     private static String buildLine(Student student, Presentation presentation) {
-        return safe(student.getId()) + "," +
-                safe(presentation.getPresentationType()) + "," +
-                safe(presentation.getTitle()) + "," +
-                safe(presentation.getDescription()) + "," +
-                safe(student.getResearchTitle()) + "," +
-                safe(student.getSupervisorName());
-    }
-
-    private static String safe(String s) {
-        return s == null ? "" : s.replace(",", " ").trim();
+        return student.getId() + "," +
+                presentation.getPresentationType() + "," +
+                presentation.getTitle() + "," +
+                presentation.getDescription() + "," +
+                student.getResearchTitle() + "," +
+                student.getSupervisorName();
     }
 }

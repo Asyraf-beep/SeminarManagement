@@ -86,14 +86,38 @@ public class CoordDashboard {
     }
 
     // ---------------- PANELS ----------------
+// ---------------- PANELS ----------------
+// ---------------- PANELS ----------------
     private JPanel createMainPanel() {
-        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
+        JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Main Menu"));
 
-        panel.add(new JLabel("WELCOME " + username + "! YOUR ROLE IS COORDINATOR")); 
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+
+        JLabel welcomeLabel = new JLabel("WELCOME " + username + "! YOUR ROLE IS COORDINATOR");
+        welcomeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JButton logoutBtn = new JButton("Logout");
+        logoutBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        logoutBtn.addActionListener(e -> {
+            frame.dispose();               // same behavior as Evaluator
+            LoginSignupUI.showLogin();     // return to login screen
+        });
+
+        centerPanel.add(Box.createVerticalGlue());
+        centerPanel.add(welcomeLabel);
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        centerPanel.add(logoutBtn);
+        centerPanel.add(Box.createVerticalGlue());
+
+        panel.add(centerPanel, BorderLayout.CENTER);
 
         return panel;
     }
+
+
 
     // ------------------------CREATE SESSION--------------------------------------
     private JPanel createSessionPanel() { 
